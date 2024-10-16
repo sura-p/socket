@@ -54,16 +54,18 @@ router.get("/peers/search", async (req, res) => {
     }
   },
   {
+    $match: { matchedUsers: { $ne: null } } // Filter out documents where matchedUsers is null
+  },
+  {
     $replaceRoot: { newRoot: '$matchedUsers' } // Replace root with the matched user
   }
 ]);
-   
-    if (!user) return res.status(404).json({ error: "User not found" }); 
+    
     return res.json({contacts: user });
   } catch (err) {
     console.log(err);
     
-    return res.status(500).json({ error: "Login failed" });
+    return res.status(500).json({ error: "user contact list failed" });
   }
 });
 
