@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../model/user");
 const multer = require('multer');
 const upload  = require("../utils");
-
+const validate_user = require("../middleware/auth");
 const router = express.Router();
 
 // JWT Secret
@@ -42,21 +42,41 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Login failed" });
   }
 
-  router.post('/update-profile',validate_user, upload.single('file') ,async (req,res)=>{
-try {
-  let updated
-  if(req.file){
-    req.body.image = req.file.filename
-     updated  = await User.findByIdAndUpdate({_id:req.userId},req.body,{new:true})
-    
-  }else{
-     updated  = await User.findByIdAndUpdate({_id:req.userId},req.body,{new:true})
-  }
-  return res.status(200).json({message:'profile updated',data:updated})
-} catch (error) {
-  res.status(500).json({message:"Oops, something went wrong"})
-}
-  })
+ 
 });
+router.put('/update-profile',validate_user.validate_user, upload.single('file') ,async (req,res)=>{
+  try {
+    let updated
+    if(req.file){
+      
+      req.body.image = req.file.filename
+      console.log(req.body);
+      updated = await User.findOneAndUpdate(
+        { _id: req.userId },
+        { $set: { ...req.body } },
+        { new: true }
+      );
+      
+      console.log("query");
+      
+    }else{
+      console.log("query123");
+       updated  = await User.findOneAndUpdate({_id:req.userId},req.body,{new:true})
+    }
+    return res.status(200).json({message:'profile updated',data:updated})
+  } catch (error) {
+    res.status(500).json({message:"Oops, something went wrong"})
+  }
+    })
+
+router.get('/get-profile', validate_user.validate_user,async (req,res)=>{
+  try {
+    const user = await User.findById({_id:req.userId})
+    delete user.password
+    return res.status(200).json({message:'profile fetched',data:user})
+  } catch (error) {
+    res.status(500).json({message:"Oops, something went wrong"})
+  }
+})
 
 module.exports = router;

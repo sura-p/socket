@@ -2,8 +2,7 @@
 const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = "your_jwt_secret";
-
-module.exports = validate_user = (req, res, next) => {
+const validate_user = (req, res, next) => {
   const token = req.header("Authorization");
   if (!token) return res.status(401).json({ error: "No token provided" });
 
@@ -15,3 +14,5 @@ module.exports = validate_user = (req, res, next) => {
     res.status(401).json({ error: "Invalid token" });
   }
 };
+
+module.exports = {validate_user};

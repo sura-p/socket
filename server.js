@@ -5,7 +5,7 @@ const socketIo = require("socket.io");
 const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contacts");
 const messageRoutes = require("./routes/messages");
-const authMiddleware = require("./middleware/auth");
+const {validate_user} = require("./middleware/auth");
 const dotenv = require("dotenv");
 dotenv.config();
 const cors = require("cors");
@@ -24,22 +24,22 @@ const io = socketIo(server, {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.DATABASE_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+mongoose.connect(process.env.DATABASE_URL);
 mongoose.set({ debug: true });
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/auth", authRoutes);
-app.use("/contacts", validate_user, contactRoutes);
+app.use("/contacts" ,validate_user, contactRoutes);
 app.use("/message", validate_user, messageRoutes);
+
+
+
+app.use("/uploads", express.static(`${__dirname}/uploads`));
 app.use("*", (req, res) => {
   return res.status(404).send({ message: "not found" });
 });
-
 // Store connected users in an array
 let users = [];
 
