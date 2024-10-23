@@ -11,10 +11,8 @@ const JWT_SECRET = "your_jwt_secret";
 
 // Register User
 router.post("/save-contact", async (req, res) => {
-
-  const {  newContact } = req.body;
   try {
-    User.findByIdAndUpdate({_id:new Types.ObjectId(req.user.id)}, { $push: { contacts: newContact } },{new:true})
+   await User.findByIdAndUpdate({_id:new Types.ObjectId(req.userId)}, { $push: { contacts: req.body.email } },{new:true})
     
     return res.status(201).json({ message: "contact save successfully" });
   } catch (err) {
@@ -68,5 +66,42 @@ router.get("/peers/search", async (req, res) => {
     return res.status(500).json({ error: "user contact list failed" });
   }
 });
+
+
+router.get('/search-peer',async (req,res)=>{
+  const currentUser = await User.findById(req.userId).select('email contacts');
+console.log(currentUser);
+
+  const peers = await User.aggregate([
+    {
+      $match: {
+        $or: [
+          { email: { $regex: req.query.search, $options: "i" } },
+          { username: { $regex: req.query.search, $options: "i" } }
+        ],
+      
+        email: { 
+          $nin: [...currentUser.contacts, currentUser.email] 
+        }
+      }
+    },
+    {
+      $addFields:{
+        connected:false
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        email: 1,
+        username: 1,
+        image: 1,
+        connected:"$connected"
+      }
+    }
+  ]);
+
+  return res.status(200).json({peer:peers})
+})
 
 module.exports = router;
