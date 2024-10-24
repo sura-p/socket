@@ -10,6 +10,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 const cors = require("cors");
 const Message = require("./model/message");
+const { saveEncryptedFile, saveBufferAsImage } = require("./encryption");
 const app = express();
 const server = http.createServer(app);
 
@@ -20,7 +21,8 @@ const io = socketIo(server, {
     methods: ["GET", "POST"],
     allowedHeaders: ["Authorization"],
     credentials: true
-  }
+  },
+  maxHttpBufferSize: 1e7
 });
 
 // Connect to MongoDB
@@ -37,6 +39,7 @@ app.use("/message", validate_user, messageRoutes);
 
 
 app.use("/uploads", express.static(`${__dirname}/uploads`));
+app.use("/sharedMedia", express.static(`${__dirname}/ImagesShared`));
 app.use("*", (req, res) => {
   return res.status(404).send({ message: "not found" });
 });
@@ -83,17 +86,30 @@ io.on("connection", (socket) => {
 
   // Handle receiving a message
   socket.on("sendMessage", async (data) => {
+    console.log("eventCalled");
+    let newMessage;
     const { senderId, receiverId, message } = data;
     console.log(data);
-
-    // Save the message to the database
-    const newMessage = new Message({
+   let filename =  saveBufferAsImage(data.fileUrl,data.fileName)
+   if(data.fileType.startsWith('video/')){
+    newMessage = await new Message({
       sender: senderId,
       receiver: receiverId,
-      message
+      message,
+      video:filename
+    }).save();
+   }else{
+     newMessage = new Message({
+      sender: senderId,
+      receiver: receiverId,
+      message,
+      image:filename
     });
 
     await newMessage.save();
+   }
+    // Save the message to the database
+   
 
     // Find the socket ID of the receiver
     const receiver = users.find((user) => user.userId === receiverId);
