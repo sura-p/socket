@@ -86,12 +86,12 @@ io.on("connection", (socket) => {
 
   // Handle receiving a message
   socket.on("sendMessage", async (data) => {
-    console.log("eventCalled");
+    console.log("data",data);
     let newMessage;
     const { senderId, receiverId, message } = data;
     console.log(data);
    let filename =  saveBufferAsImage(data.fileUrl,data.fileName)
-   if(data.fileType.startsWith('video/')){
+   if(data.fileType&&data.fileType.startsWith('video/')){
     newMessage = await new Message({
       sender: senderId,
       receiver: receiverId,
