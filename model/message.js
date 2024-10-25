@@ -6,6 +6,7 @@ const messageSchema = new mongoose.Schema({
   receiver: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   image:{type: String, default:""},
   video:{type: String, default:""},
+  audioURL:{type: String, default:""},
   message: { type: String, default:""},
   createdAt: { type: Date, default: Date.now },
 });

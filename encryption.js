@@ -3,7 +3,8 @@ const path = require("path");
 
 // Function to save buffer as a file
 function saveBufferAsImage(buffer, fileName) {
-  console.log(fileName, "fileName");
+
+  console.log(fileName, "fileName",buffer);
 
   // Check if the buffer is defined and has a valid length
   if (!buffer || !Buffer.isBuffer(buffer) || buffer.length === 0) {

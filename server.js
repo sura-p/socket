@@ -5,7 +5,7 @@ const socketIo = require("socket.io");
 const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contacts");
 const messageRoutes = require("./routes/messages");
-const {validate_user} = require("./middleware/auth");
+const { validate_user } = require("./middleware/auth");
 const dotenv = require("dotenv");
 dotenv.config();
 const cors = require("cors");
@@ -33,10 +33,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/auth", authRoutes);
-app.use("/contacts" ,validate_user, contactRoutes);
+app.use("/contacts", validate_user, contactRoutes);
 app.use("/message", validate_user, messageRoutes);
-
-
 
 app.use("/uploads", express.static(`${__dirname}/uploads`));
 app.use("/sharedMedia", express.static(`${__dirname}/ImagesShared`));
@@ -51,7 +49,9 @@ setInterval(() => {
   for (const user of users) {
     io.emit("userStatus", { userId: user.userId, status: true });
   }
-}, 2000);
+
+  console.log("heartbeat");
+}, 1000);
 
 // Socket.io connection handling
 io.on("connection", (socket) => {
@@ -86,30 +86,48 @@ io.on("connection", (socket) => {
 
   // Handle receiving a message
   socket.on("sendMessage", async (data) => {
-    console.log("data",data);
+    console.log("data", data);
     let newMessage;
     const { senderId, receiverId, message } = data;
     console.log(data);
-   let filename =  saveBufferAsImage(data.fileUrl,data.fileName)
-   if(data.fileType&&data.fileType.startsWith('video/')){
-    newMessage = await new Message({
-      sender: senderId,
-      receiver: receiverId,
-      message,
-      video:filename
-    }).save();
-   }else{
-     newMessage = new Message({
-      sender: senderId,
-      receiver: receiverId,
-      message,
-      image:filename
-    });
+    let filename;
+    if (data.fileType && data.fileType.startsWith("audio/")) {
+      filename = saveBufferAsImage(data.audio, "audio.webm");
+      newMessage = await new Message({
+        sender: senderId,
+        receiver: receiverId,
+        message,
+        audioURL: filename
+      }).save();
+    } else if (data.fileType && data.fileType.startsWith("video/")) {
+      filename = saveBufferAsImage(data.fileUrl, data.fileName);
+      newMessage = await new Message({
+        sender: senderId,
+        receiver: receiverId,
+        message,
+        video: filename
+      }).save();
+    } else if(data.fileType && data.fileType.startsWith("image/")) {
+      filename = saveBufferAsImage(data.fileUrl, data.fileName);
+      newMessage = new Message({
+        sender: senderId,
+        receiver: receiverId,
+        message,
+        image: filename
+      });
 
-    await newMessage.save();
-   }
+      await newMessage.save();
+    } else {
+      newMessage = new Message({
+        sender: senderId,
+        receiver: receiverId,
+        message,
+        image: filename
+      });
+
+      await newMessage.save();
+    }
     // Save the message to the database
-   
 
     // Find the socket ID of the receiver
     const receiver = users.find((user) => user.userId === receiverId);
