@@ -17,6 +17,23 @@ function saveBufferAsImage(buffer, fileName) {
     console.error("Invalid file name provided.");
     return;
   }
+
+  const fullPath = path.resolve(path.join(process.cwd(), "ImagesShared"));
+
+  if (!fs.existsSync(fullPath)) {
+    // Create the folder
+    fs.mkdir(fullPath, { recursive: true }, (err) => {
+      if (err) {
+        console.error(`Error creating folder: ${err.message}`);
+      } else {
+        console.log(`Folder created: ${fullPath}`);
+      }
+    });
+  } else {
+    console.log(`Folder already exists: ${fullPath}`);
+  }
+
+
   let sanitizedName = fileName.replace(/\s+/g, '')
   let updatedFilename = `${sanitizedName.replace(/\s+/g, '').split(".")[0]}-${new Date().getTime()}.${
     sanitizedName.split(".")[1]
