@@ -51,7 +51,7 @@ setInterval(() => {
   }
 
   console.log("heartbeat");
-}, 1000);
+}, 3000);
 
 // Socket.io connection handling
 io.on("connection", (socket) => {

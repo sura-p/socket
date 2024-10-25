@@ -17,8 +17,9 @@ function saveBufferAsImage(buffer, fileName) {
     console.error("Invalid file name provided.");
     return;
   }
-  let updatedFilename = `${fileName.split(".")[0]}-${new Date()}.${
-    fileName.split(".")[1]
+  let sanitizedName = fileName.replace(/\s+/g, '')
+  let updatedFilename = `${sanitizedName.replace(/\s+/g, '').split(".")[0]}-${new Date().getTime()}.${
+    sanitizedName.split(".")[1]
   }`;
   const uploadPath = path.join(process.cwd(), "ImagesShared", updatedFilename);
 
